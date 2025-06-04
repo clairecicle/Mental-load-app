@@ -1,44 +1,48 @@
 import { NextResponse } from "next/server"
-import { execute, queryOne } from "@/lib/db"
+import { readDatabase, writeDatabase } from "@/lib/db"
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
-    const { is_purchased, purchased_by_id } = body
+    const { is_purchased, purchased_by_id, category } = body
 
-    // Check if item exists
-    const existingItem = await queryOne("SELECT * FROM shopping_list_items WHERE id = ?", [params.id])
-    if (!existingItem) {
+    const db = await readDatabase()
+
+    // Find the item
+    const itemIndex = db.shopping_list_items.findIndex((item) => item.id === params.id)
+    if (itemIndex === -1) {
       return NextResponse.json({ success: false, message: "Shopping item not found" }, { status: 404 })
     }
 
-    // Update item
-    const purchasedAt = is_purchased ? "datetime('now')" : null
+    const item = db.shopping_list_items[itemIndex]
 
-    await execute(
-      `UPDATE shopping_list_items SET
-        is_purchased = COALESCE(?, is_purchased),
-        purchased_by_id = CASE WHEN ? = 1 THEN ? ELSE NULL END,
-        purchased_at = CASE WHEN ? = 1 THEN ${purchasedAt} ELSE NULL END
-      WHERE id = ?`,
-      [is_purchased, is_purchased, purchased_by_id, is_purchased, params.id],
-    )
+    // Update the item
+    if (is_purchased !== undefined) {
+      item.is_purchased = is_purchased
+      item.purchased_by_id = is_purchased ? purchased_by_id : null
+      item.purchased_at = is_purchased ? new Date().toISOString() : null
+    }
 
-    // Get updated item
-    const updatedItem = await queryOne(
-      `
-      SELECT s.*, 
-             c.name as created_by_name,
-             p.name as purchased_by_name
-      FROM shopping_list_items s
-      JOIN users c ON s.created_by_id = c.id
-      LEFT JOIN users p ON s.purchased_by_id = p.id
-      WHERE s.id = ?
-    `,
-      [params.id],
-    )
+    if (category !== undefined) {
+      item.category = category
+    }
 
-    return NextResponse.json({ success: true, item: updatedItem })
+    item.updated_at = new Date().toISOString()
+
+    // Save to database
+    await writeDatabase(db)
+
+    // Get user names for response
+    const createdBy = db.users.find((u) => u.id === item.created_by_id)
+    const purchasedBy = item.purchased_by_id ? db.users.find((u) => u.id === item.purchased_by_id) : null
+
+    const responseItem = {
+      ...item,
+      created_by_name: createdBy?.name || "Unknown",
+      purchased_by_name: purchasedBy?.name || null,
+    }
+
+    return NextResponse.json({ success: true, item: responseItem })
   } catch (error) {
     console.error(`Failed to update shopping item ${params.id}:`, error)
     return NextResponse.json(
@@ -50,14 +54,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    // Check if item exists
-    const existingItem = await queryOne("SELECT * FROM shopping_list_items WHERE id = ?", [params.id])
-    if (!existingItem) {
+    const db = await readDatabase()
+
+    // Find the item
+    const itemIndex = db.shopping_list_items.findIndex((item) => item.id === params.id)
+    if (itemIndex === -1) {
       return NextResponse.json({ success: false, message: "Shopping item not found" }, { status: 404 })
     }
 
-    // Delete item
-    await execute("DELETE FROM shopping_list_items WHERE id = ?", [params.id])
+    // Remove the item
+    db.shopping_list_items.splice(itemIndex, 1)
+
+    // Save to database
+    await writeDatabase(db)
 
     return NextResponse.json({ success: true, message: "Shopping item deleted successfully" })
   } catch (error) {

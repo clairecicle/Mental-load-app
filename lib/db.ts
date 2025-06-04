@@ -132,6 +132,10 @@ async function writeDb(db: Database): Promise<void> {
   await fs.writeFile(dbPath, JSON.stringify(db, null, 2))
 }
 
+// Export the read and write functions with the expected names
+export const readDatabase = readDb
+export const writeDatabase = writeDb
+
 // Helper functions
 export async function query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
   const db = await readDb()

@@ -1,270 +1,190 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Plus, MessageSquare, Clock, Users } from "lucide-react"
-import Link from "next/link"
+import { Plus, MessageSquare } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+interface DiscussionItem {
+  id: string
+  title: string
+  details?: string
+  author: string
+  authorAvatar: string
+  timestamp: string
+  isUnread?: boolean
+  emoji?: string
+  category?: string
+}
 
 export function DiscussionInbox() {
-  const discussionItems = [
+  const [activeTab, setActiveTab] = useState("all")
+  const [discussions, setDiscussions] = useState<DiscussionItem[]>([])
+  const router = useRouter()
+
+  // Sample discussion data
+  const sampleDiscussions: DiscussionItem[] = [
     {
       id: "1",
       title: "Should we get a robot vacuum?",
-      details:
-        "I saw a good deal on a Roomba. What do you think? It could really help with the daily cleaning routine and save us time on weekends.",
-      author: "Bob",
-      authorAvatar: "BS",
+      author: "Alice",
+      authorAvatar: "AJ",
       timestamp: "2 hours ago",
-      replies: 3,
       isUnread: true,
       emoji: "🤖",
-      category: "Home Improvement",
+      category: "Home",
     },
     {
       id: "2",
-      title: "Planning Max's vet appointment",
-      details: "His annual checkup is due. Should we schedule for next week or wait until after the holidays?",
-      author: "Alice",
-      authorAvatar: "AJ",
-      timestamp: "1 day ago",
-      replies: 1,
-      isUnread: false,
-      emoji: "🐕",
-      category: "Pet Care",
+      title: "Planning summer vacation",
+      author: "Bob",
+      authorAvatar: "BS",
+      timestamp: "Yesterday",
+      emoji: "✈️",
+      category: "Travel",
     },
     {
       id: "3",
       title: "Kitchen renovation ideas",
-      details: "I've been thinking about updating the backsplash. Found some nice tile options online.",
       author: "Alice",
       authorAvatar: "AJ",
-      timestamp: "3 days ago",
-      replies: 5,
-      isUnread: false,
+      timestamp: "2 days ago",
       emoji: "🏠",
-      category: "Home Improvement",
+      category: "Home",
     },
     {
       id: "4",
       title: "Weekly meal planning",
-      details: "Should we try that new recipe book we got? I'm thinking we could plan meals for next week together.",
       author: "Bob",
       authorAvatar: "BS",
-      timestamp: "5 days ago",
-      replies: 2,
-      isUnread: false,
+      timestamp: "3 days ago",
       emoji: "🍽️",
-      category: "Meal Planning",
-    },
-    {
-      id: "5",
-      title: "Summer vacation planning",
-      details: "It's time to start thinking about our summer trip. Any preferences for destinations?",
-      author: "Alice",
-      authorAvatar: "AJ",
-      timestamp: "1 week ago",
-      replies: 8,
-      isUnread: false,
-      emoji: "✈️",
-      category: "Travel",
+      category: "Food",
     },
   ]
 
-  const getCategoryColor = (category: string): string => {
-    const categoryColors: Record<string, string> = {
-      "Home Improvement": "bg-blue-100",
-      "Pet Care": "bg-purple-100",
-      "Meal Planning": "bg-green-100",
-      Travel: "bg-yellow-100",
-      Finance: "bg-orange-100",
-      Health: "bg-pink-100",
-      Other: "bg-gray-100",
+  useEffect(() => {
+    // Load discussions from localStorage or use sample data if none exist
+    const storedDiscussions = localStorage.getItem("discussions")
+    if (storedDiscussions) {
+      const parsedDiscussions = JSON.parse(storedDiscussions)
+      setDiscussions([...parsedDiscussions, ...sampleDiscussions])
+    } else {
+      setDiscussions(sampleDiscussions)
     }
-    return categoryColors[category] || "bg-gray-100"
+  }, [])
+
+  const getFilteredDiscussions = () => {
+    if (activeTab === "all") {
+      return discussions
+    } else if (activeTab === "unread") {
+      return discussions.filter((discussion) => discussion.isUnread)
+    } else if (activeTab === "new") {
+      return discussions.filter((discussion) => discussion.category === "New")
+    }
+    return discussions
   }
 
-  const unreadCount = discussionItems.filter((item) => item.isUnread).length
+  const groupedDiscussions = getFilteredDiscussions().reduce<Record<string, DiscussionItem[]>>((groups, discussion) => {
+    const category = discussion.category || "Other"
+    if (!groups[category]) {
+      groups[category] = []
+    }
+    groups[category].push(discussion)
+    return groups
+  }, {})
+
+  // Ensure "New" category appears first if it exists
+  const sortedCategories = Object.keys(groupedDiscussions).sort((a, b) => {
+    if (a === "New") return -1
+    if (b === "New") return 1
+    if (a === "Other") return -1
+    if (b === "Other") return 1
+    return a.localeCompare(b)
+  })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 font-['Nunito']">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 pb-20">
       <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <MessageSquare className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-white">Discussion Inbox</h1>
-              <p className="text-sm text-white/80">
-                {unreadCount > 0 ? `${unreadCount} new conversations` : "All caught up!"}
-              </p>
-            </div>
-          </div>
-        </div>
+        <h1 className="text-xl font-bold text-white">Discussions</h1>
+        <p className="text-sm text-white/80">Household conversations</p>
       </div>
 
-      <div className="p-4 space-y-4 pb-32">
-        {/* Unread Discussions */}
-        {discussionItems.filter((item) => item.isUnread).length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-4 my-6">
-              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <span className="text-white font-bold text-sm">!</span>
-              </div>
-              <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">New</h2>
-              <div className="flex-1 h-px bg-white/30"></div>
-              <span className="text-sm text-white/80">{discussionItems.filter((item) => item.isUnread).length}</span>
-            </div>
+      <div className="p-4">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4 bg-white/20 backdrop-blur-sm">
+            <TabsTrigger value="all" className="text-white data-[state=active]:bg-white/30">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="unread" className="text-white data-[state=active]:bg-white/30">
+              Unread
+            </TabsTrigger>
+            <TabsTrigger value="new" className="text-white data-[state=active]:bg-white/30">
+              New
+            </TabsTrigger>
+          </TabsList>
 
-            {discussionItems
-              .filter((item) => item.isUnread)
-              .map((item) => (
-                <Card
-                  key={item.id}
-                  className="border-0 shadow-xl bg-white/95 backdrop-blur-sm overflow-hidden ring-2 ring-white/30 hover:shadow-2xl transition-all duration-200 hover:scale-[1.02]"
-                >
-                  <CardContent className="p-0">
-                    <div className="flex items-start">
-                      <div
-                        className={`w-14 h-14 flex items-center justify-center text-2xl ${getCategoryColor(item.category)}`}
-                      >
-                        {item.emoji}
-                      </div>
-                      <div className="flex-1 p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-gray-900 text-base">{item.title}</h3>
-                              <Badge variant="secondary" className="text-xs rounded-full bg-green-100 text-green-700">
-                                New
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-3">{item.details}</p>
-                          </div>
+          <TabsContent value={activeTab} className="space-y-6 mt-2">
+            {sortedCategories.map((category) => (
+              <div key={category} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-sm font-bold text-white/90 uppercase tracking-wider">{category}</h2>
+                  <div className="flex-1 h-px bg-white/20"></div>
+                </div>
+
+                <div className="space-y-3">
+                  {groupedDiscussions[category].map((discussion) => (
+                    <div
+                      key={discussion.id}
+                      className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-white/10"
+                    >
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">
+                          {discussion.emoji || "💬"}
                         </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-xs">{item.authorAvatar}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm text-gray-600">{item.author}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-sm text-gray-500">
-                              <Clock className="h-3 w-3" />
-                              <span>{item.timestamp}</span>
-                            </div>
-                            {item.replies > 0 && (
-                              <div className="flex items-center gap-1 text-sm text-gray-500">
-                                <Users className="h-3 w-3" />
-                                <span>{item.replies} replies</span>
-                              </div>
-                            )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-white">{discussion.title}</h3>
+                            {discussion.isUnread && <span className="bg-blue-500 w-2 h-2 rounded-full"></span>}
                           </div>
-                          <div className="flex justify-end">
-                            <Link href={`/discussion/${item.id}/create-task`}>
-                              <Button variant="outline" size="sm" className="rounded-full border-gray-200">
-                                Create Task
-                              </Button>
-                            </Link>
+                          <div className="flex items-center gap-2 text-xs text-white/70 mt-1">
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-600">
+                                {discussion.authorAvatar}
+                              </div>
+                              <span>{discussion.author}</span>
+                            </div>
+                            <span>•</span>
+                            <span>{discussion.timestamp}</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        )}
-
-        {/* Earlier Discussions */}
-        {discussionItems.filter((item) => !item.isUnread).length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-4 my-6">
-              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <MessageSquare className="h-4 w-4 text-white" />
+                  ))}
+                </div>
               </div>
-              <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">Earlier</h2>
-              <div className="flex-1 h-px bg-white/30"></div>
-              <span className="text-sm text-white/80">{discussionItems.filter((item) => !item.isUnread).length}</span>
-            </div>
+            ))}
 
-            {discussionItems
-              .filter((item) => !item.isUnread)
-              .map((item) => (
-                <Card
-                  key={item.id}
-                  className="border-0 shadow-xl bg-white/95 backdrop-blur-sm overflow-hidden hover:shadow-2xl transition-all duration-200 hover:scale-[1.02]"
-                >
-                  <CardContent className="p-0">
-                    <div className="flex items-start">
-                      <div
-                        className={`w-14 h-14 flex items-center justify-center text-2xl ${getCategoryColor(item.category)}`}
-                      >
-                        {item.emoji}
-                      </div>
-                      <div className="flex-1 p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900 text-base mb-1">{item.title}</h3>
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-3">{item.details}</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-xs">{item.authorAvatar}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm text-gray-600">{item.author}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-sm text-gray-500">
-                              <Clock className="h-3 w-3" />
-                              <span>{item.timestamp}</span>
-                            </div>
-                            {item.replies > 0 && (
-                              <div className="flex items-center gap-1 text-sm text-gray-500">
-                                <Users className="h-3 w-3" />
-                                <span>{item.replies} replies</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex justify-end">
-                            <Link href={`/discussion/${item.id}/create-task`}>
-                              <Button variant="outline" size="sm" className="rounded-full border-gray-200">
-                                Create Task
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {discussionItems.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">💬</div>
-            <h3 className="text-lg font-semibold text-white mb-2">No discussions yet</h3>
-            <p className="text-white/80">Start a conversation with your household!</p>
-          </div>
-        )}
+            {getFilteredDiscussions().length === 0 && (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-8 w-8 text-white/60" />
+                </div>
+                <h3 className="text-white font-medium">No discussions found</h3>
+                <p className="text-white/70 text-sm mt-1">Start a new discussion to get the conversation going</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Floating New Topic Button */}
+      {/* Floating Action Button */}
       <div className="fixed bottom-20 right-4">
         <Button
-          size="lg"
-          className="rounded-full shadow-2xl h-14 w-14 p-0 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-colors"
+          onClick={() => router.push("/add-discussion")}
+          size="icon"
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
         >
           <Plus className="h-6 w-6" />
         </Button>

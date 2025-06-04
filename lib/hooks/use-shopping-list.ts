@@ -140,5 +140,37 @@ export function useShoppingList() {
     }
   }
 
-  return { items, loading, error, toggleItemPurchased, addItem, removeItem }
+  const updateItemCategory = async (itemId: string, category: string) => {
+    try {
+      const response = await fetch(`/api/shopping/${itemId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category: category,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update item category")
+      }
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update the items state
+        setItems((prevItems) => prevItems.map((item) => (item.id === itemId ? data.item : item)))
+        return true
+      } else {
+        throw new Error(data.message || "Failed to update item category")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      console.error("Error updating item category:", err)
+      return false
+    }
+  }
+
+  return { items, loading, error, toggleItemPurchased, addItem, removeItem, updateItemCategory }
 }

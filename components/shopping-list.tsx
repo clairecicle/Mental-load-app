@@ -4,10 +4,11 @@ import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ShoppingCart, Plus, Trash2 } from "lucide-react"
 import { CuteCheckbox } from "@/components/cute-checkbox"
+import { useToast } from "@/hooks/use-toast"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface ShoppingItem {
   id: string
@@ -115,9 +116,30 @@ export function ShoppingList() {
   ])
 
   const [newItem, setNewItem] = useState("")
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [celebrationMessage, setCelebrationMessage] = useState("")
+
+  const { toast } = useToast()
+
+  const updateItemCategory = (id: string, newCategory: string) => {
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, category: newCategory } : item)))
+    toast({
+      title: "Category updated",
+      description: `Item moved to ${newCategory}`,
+    })
+  }
 
   const togglePurchased = (id: string) => {
+    const item = items.find((i) => i.id === id)
+    const wasPurchased = item?.isPurchased
+
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, isPurchased: !item.isPurchased } : item)))
+
+    if (!wasPurchased && item) {
+      setCelebrationMessage(`${item.name} purchased! 🛒`)
+      setShowCelebration(true)
+      setTimeout(() => setShowCelebration(false), 2000)
+    }
   }
 
   const addItem = () => {
@@ -182,7 +204,11 @@ export function ShoppingList() {
     })
 
     // Sort categories alphabetically
-    const sortedCategories = Object.keys(grouped).sort()
+    const sortedCategories = Object.keys(grouped).sort((a, b) => {
+      if (a === "Other") return -1
+      if (b === "Other") return 1
+      return a.localeCompare(b)
+    })
 
     return {
       categories: sortedCategories.map((category) => ({
@@ -194,19 +220,7 @@ export function ShoppingList() {
   }, [items])
 
   const getCategoryColor = (category: string): string => {
-    const categoryColors: Record<string, string> = {
-      Dairy: "bg-blue-100",
-      "Pet Supplies": "bg-purple-100",
-      Bakery: "bg-yellow-100",
-      Household: "bg-green-100",
-      Produce: "bg-emerald-100",
-      Pantry: "bg-orange-100",
-      Meat: "bg-red-100",
-      Frozen: "bg-cyan-100",
-      Snacks: "bg-pink-100",
-      Beverages: "bg-indigo-100",
-      Other: "bg-gray-100",
-    }
+    const categoryColors = getCategoryColors()
     return categoryColors[category] || "bg-gray-100"
   }
 
@@ -227,6 +241,22 @@ export function ShoppingList() {
     return categoryEmojis[category] || "🛒"
   }
 
+  const getCategoryColors = (): Record<string, string> => {
+    return {
+      Other: "bg-gray-100",
+      Dairy: "bg-blue-100",
+      "Pet Supplies": "bg-purple-100",
+      Bakery: "bg-yellow-100",
+      Household: "bg-green-100",
+      Produce: "bg-emerald-100",
+      Pantry: "bg-orange-100",
+      Meat: "bg-red-100",
+      Frozen: "bg-cyan-100",
+      Snacks: "bg-pink-100",
+      Beverages: "bg-indigo-100",
+    }
+  }
+
   const renderShoppingItem = (item: ShoppingItem) => (
     <Card
       key={item.id}
@@ -242,20 +272,25 @@ export function ShoppingList() {
               <h3 className={`font-semibold ${item.isPurchased ? "text-gray-500 line-through" : "text-gray-900"}`}>
                 {item.name}
               </h3>
-              <Badge variant="outline" className="rounded-full text-xs">
-                {item.category}
-              </Badge>
-            </div>
-            {item.quantity && (
-              <p className={`text-sm ${item.isPurchased ? "text-gray-500 line-through" : "text-gray-600"} mb-1`}>
-                {item.quantity}
-              </p>
-            )}
-            <div className="flex items-center gap-2">
-              <Avatar className="h-5 w-5">
-                <AvatarFallback className="text-xs">{item.addedByAvatar}</AvatarFallback>
-              </Avatar>
-              <span className="text-xs text-gray-500">Added by {item.addedBy}</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Badge variant="outline" className="rounded-full text-xs cursor-pointer hover:bg-gray-100">
+                    {item.category} ▼
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {Object.keys(getCategoryColors()).map((category) => (
+                    <DropdownMenuItem
+                      key={category}
+                      onClick={() => updateItemCategory(item.id, category)}
+                      className="flex items-center gap-2"
+                    >
+                      <span>{getCategoryEmoji(category)}</span>
+                      {category}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <div className="flex items-center gap-2 pr-4">
@@ -294,6 +329,16 @@ export function ShoppingList() {
           </div>
         </div>
       </div>
+
+      {/* Celebration Popup */}
+      {showCelebration && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm border border-green-200 rounded-full px-6 py-3 shadow-xl animate-bounce">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🎉</span>
+            <span className="font-semibold text-green-700">{celebrationMessage}</span>
+          </div>
+        </div>
+      )}
 
       <div className="p-4 space-y-4 pb-32">
         {/* Category Sections */}
