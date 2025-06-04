@@ -7,9 +7,14 @@ import { Bell } from "lucide-react"
 export function NotificationPermission() {
   const [permission, setPermission] = useState<NotificationPermission>("default")
   const [showPrompt, setShowPrompt] = useState(false)
+  const [vapidKeyAvailable, setVapidKeyAvailable] = useState(false)
 
   useEffect(() => {
-    if ("Notification" in window) {
+    // Check if VAPID key is available
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    setVapidKeyAvailable(!!vapidKey)
+
+    if ("Notification" in window && vapidKey) {
       setPermission(Notification.permission)
       // Show prompt if permission is default and user hasn't dismissed it
       const dismissed = localStorage.getItem("notification-prompt-dismissed")
@@ -38,18 +43,28 @@ export function NotificationPermission() {
         const registration = await navigator.serviceWorker.register("/service-worker.js")
         console.log("Service Worker registered:", registration)
 
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        if (!vapidKey) {
+          console.error("VAPID public key not available")
+          return
+        }
+
         // Subscribe to push notifications
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""),
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
         })
 
         // Send subscription to server
-        await fetch("/api/push/subscribe", {
+        const response = await fetch("/api/push/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(subscription),
         })
+
+        if (!response.ok) {
+          console.error("Failed to save subscription")
+        }
       } catch (error) {
         console.error("Service Worker registration failed:", error)
       }
@@ -73,7 +88,8 @@ export function NotificationPermission() {
     return outputArray
   }
 
-  if (!showPrompt || !("Notification" in window)) {
+  // Don't show if VAPID keys aren't configured or notification API isn't available
+  if (!showPrompt || !("Notification" in window) || !vapidKeyAvailable) {
     return null
   }
 

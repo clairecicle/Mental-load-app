@@ -3,6 +3,16 @@ import { readDatabase, writeDatabase } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if VAPID keys are configured
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+
+    if (!vapidPublicKey) {
+      return NextResponse.json({
+        success: false,
+        message: "VAPID public key not configured. Please set NEXT_PUBLIC_VAPID_PUBLIC_KEY environment variable.",
+      })
+    }
+
     const subscription = await request.json()
 
     // Read current database

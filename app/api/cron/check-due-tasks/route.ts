@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server"
 import { readDatabase, writeDatabase } from "@/lib/db"
-import webpush from "web-push"
-
-// Configure web-push (you'll need to set these environment variables)
-webpush.setVapidDetails(
-  "mailto:your-email@example.com",
-  process.env.VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || "",
-)
 
 export async function GET() {
   try {
+    // Check if VAPID keys are configured
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
+
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      return NextResponse.json({
+        success: false,
+        message: "VAPID keys not configured. Please set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables.",
+      })
+    }
+
+    // Dynamically import web-push only when needed
+    const webpush = (await import("web-push")).default
+
+    // Configure web-push
+    webpush.setVapidDetails("mailto:your-email@example.com", vapidPublicKey, vapidPrivateKey)
+
     const db = readDatabase()
     const now = new Date()
 
