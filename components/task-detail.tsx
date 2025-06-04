@@ -93,7 +93,7 @@ export function TaskDetail({ taskId }: TaskDetailProps) {
     const domainColors: Record<string, string> = {
       "Pet Care": "bg-blue-100",
       "Kitchen Management": "bg-green-100",
-      "Bills & Finance": "bg-purple-100",
+      "Bills & Finance": "bg-purple-100 ",
       Household: "bg-yellow-100",
       Home: "bg-teal-100",
       "Self Care": "bg-pink-100",
