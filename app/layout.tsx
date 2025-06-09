@@ -17,7 +17,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div className="mx-auto" style={{ maxWidth: "430px", maxHeight: "932px" }}>
+        <div className="mx-auto" style={{ maxWidth: "430px", maxHeight: "932px", overflow: "hidden" }}>
           <main className="pb-16">{children}</main>
           <NavigationBar />
         </div>

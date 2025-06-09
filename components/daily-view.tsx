@@ -526,10 +526,10 @@ export function DailyView() {
 
       {/* Floating Action Button for Add Task */}
       <Link href="/add-task">
-        <div className="fixed bottom-20 right-4">
+        <div className="fixed bottom-20 mx-auto" style={{ maxWidth: "422px", right: "calc(50% - 211px + 10px)" }}>
           <Button
             size="lg"
-            className="rounded-full shadow-2xl h-14 w-14 p-0 bg-gradient-to-br from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 transition-colors"
+            className="rounded-full shadow-2xl h-14 w-14 p-0 bg-gradient-to-br from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 transition-colors border-2 border-white"
           >
             <Plus className="h-6 w-6" />
           </Button>

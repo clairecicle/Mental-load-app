@@ -33,7 +33,7 @@ export function NavigationBar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t bg-white">
-      <div className="flex items-center justify-around">
+      <div className="mx-auto flex items-center justify-around" style={{ maxWidth: "430px" }}>
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (

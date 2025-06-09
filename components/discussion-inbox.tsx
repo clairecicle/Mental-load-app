@@ -180,11 +180,11 @@ export function DiscussionInbox() {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-20 right-4">
+      <div className="fixed bottom-20 right-4 mx-auto" style={{ maxWidth: "422px", right: "calc(50% - 211px + 10px)" }}>
         <Button
           onClick={() => router.push("/add-discussion")}
           size="icon"
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 border-2 border-white"
         >
           <Plus className="h-6 w-6" />
         </Button>
