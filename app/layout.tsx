@@ -1,5 +1,6 @@
 import type React from "react"
 import { NavigationBar } from "@/components/navigation-bar"
+import { NotificationPermission } from "@/components/notification-permission"
 import "./globals.css"
 
 export default function RootLayout({
@@ -27,5 +28,5 @@ export default function RootLayout({
 }
 
 export const metadata = {
-      generator: 'v0.dev'
-    };
+  generator: "v0.dev",
+}
