@@ -1,6 +1,7 @@
 import type React from "react"
 import { NavigationBar } from "@/components/navigation-bar"
 import { NotificationPermission } from "@/components/notification-permission"
+import { AuthProvider } from "@/components/AuthProvider"
 import "./globals.css"
 
 export default function RootLayout({
@@ -18,10 +19,12 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div className="mx-auto" style={{ maxWidth: "430px", maxHeight: "932px", overflow: "hidden" }}>
-          <main className="pb-16">{children}</main>
-          <NavigationBar />
-        </div>
+        <AuthProvider>
+          <div className="mx-auto" style={{ maxWidth: "430px", maxHeight: "932px", overflow: "hidden" }}>
+            <main className="pb-16">{children}</main>
+            <NavigationBar />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   )

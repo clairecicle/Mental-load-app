@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 import {  signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/firebase/config";
+import { createOrFetchUser } from "@/firebase/services/userService";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -35,47 +36,46 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
-
-
-
     setIsLoading(true)
 
     const provider = new GoogleAuthProvider();
 
-    // const auth = getAuth();
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential?.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        // IdP data available using getAdditionalUserInfo(result)
-        // ...
-
-        console.log(token, user)
-      }).catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.customData.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        // ...
-
-        console.log(errorCode, errorMessage, email, credential)
-      });
-
-    // Simulate Google login - replace with actual authentication
     try {
-      // Mock successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      router.push("/")
-    } catch (error) {
-      console.error("Google login failed:", error)
+      const result = await signInWithPopup(auth, provider);
+      
+      // This gives you a Google Access Token. You can use it to access the Google API.
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      // The signed-in user info.
+      const user = result.user;
+      
+      console.log("Google login successful:", { token, user });
+
+      // Create or fetch user from Firestore
+      try {
+        const firestoreUser = await createOrFetchUser(user);
+        console.log("User data from Firestore:", firestoreUser);
+        
+        // Redirect to home page after successful login and user creation/fetch
+        router.push("/");
+      } catch (firestoreError) {
+        console.error("Error with Firestore user operation:", firestoreError);
+        // Still redirect even if Firestore operation fails
+        router.push("/");
+      }
+      
+    } catch (error: any) {
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // The email of the user's account used.
+      const email = error.customData?.email;
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      
+      console.error("Google login failed:", { errorCode, errorMessage, email, credential });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
