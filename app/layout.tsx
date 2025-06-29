@@ -20,7 +20,7 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <div className="mx-auto" style={{ maxWidth: "430px", maxHeight: "932px", overflow: "hidden" }}>
+          <div className="mx-auto" style={{ maxWidth: "430px",  }}>
             <main className="pb-16">{children}</main>
             <NavigationBar />
           </div>

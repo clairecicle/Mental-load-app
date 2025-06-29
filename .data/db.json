@@ -1,0 +1,126 @@
+{
+  "users": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "email": "alice@example.com",
+      "name": "Alice Johnson",
+      "created_at": "2025-06-28T23:39:56.470Z",
+      "updated_at": "2025-06-28T23:39:56.470Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "email": "bob@example.com",
+      "name": "Bob Smith",
+      "created_at": "2025-06-28T23:39:56.470Z",
+      "updated_at": "2025-06-28T23:39:56.470Z"
+    }
+  ],
+  "households": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "name": "The Johnson-Smith Family",
+      "created_at": "2025-06-28T23:39:56.470Z",
+      "updated_at": "2025-06-28T23:39:56.470Z"
+    }
+  ],
+  "user_households": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440101",
+      "user_id": "550e8400-e29b-41d4-a716-446655440001",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "role": "admin",
+      "joined_at": "2025-06-28T23:39:56.470Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440102",
+      "user_id": "550e8400-e29b-41d4-a716-446655440002",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "role": "member",
+      "joined_at": "2025-06-28T23:39:56.470Z"
+    }
+  ],
+  "domains": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440020",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "owner_id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Kitchen Management",
+      "details": "All tasks related to kitchen cleaning and maintenance",
+      "created_at": "2025-06-28T23:39:56.470Z",
+      "updated_at": "2025-06-28T23:39:56.470Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440021",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "owner_id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Pet Care",
+      "details": "Taking care of our dog Max",
+      "created_at": "2025-06-28T23:39:56.470Z",
+      "updated_at": "2025-06-28T23:39:56.470Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440030",
+      "domain_id": "550e8400-e29b-41d4-a716-446655440020",
+      "owner_id": "550e8400-e29b-41d4-a716-446655440001",
+      "title": "Clean refrigerator",
+      "details": "Deep clean shelves and drawers",
+      "due_date": "2025-06-30",
+      "frequency_type": "weekly",
+      "frequency_interval": 1,
+      "is_completed": false,
+      "is_snoozed": false,
+      "created_at": "2025-06-28T23:39:56.471Z",
+      "updated_at": "2025-06-28T23:39:56.471Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440031",
+      "domain_id": "550e8400-e29b-41d4-a716-446655440021",
+      "owner_id": "550e8400-e29b-41d4-a716-446655440002",
+      "title": "Walk Max",
+      "details": "Morning walk around the neighborhood",
+      "due_date": "2025-06-28",
+      "frequency_type": "daily",
+      "frequency_interval": 1,
+      "is_completed": false,
+      "is_snoozed": false,
+      "created_at": "2025-06-28T23:39:56.471Z",
+      "updated_at": "2025-06-28T23:39:56.471Z"
+    }
+  ],
+  "discussion_items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440050",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "created_by_id": "550e8400-e29b-41d4-a716-446655440002",
+      "title": "Should we get a robot vacuum?",
+      "details": "I saw a good deal on a Roomba. What do you think?",
+      "is_resolved": false,
+      "created_at": "2025-06-28T23:39:56.471Z",
+      "updated_at": "2025-06-28T23:39:56.471Z"
+    }
+  ],
+  "shopping_list_items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440060",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "created_by_id": "550e8400-e29b-41d4-a716-446655440001",
+      "item_name": "Milk",
+      "quantity": "1 gallon",
+      "is_purchased": false,
+      "created_at": "2025-06-28T23:39:56.471Z",
+      "updated_at": "2025-06-28T23:39:56.471Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440061",
+      "household_id": "550e8400-e29b-41d4-a716-446655440010",
+      "created_by_id": "550e8400-e29b-41d4-a716-446655440002",
+      "item_name": "Dog food",
+      "quantity": "1 bag",
+      "is_purchased": false,
+      "created_at": "2025-06-28T23:39:56.471Z",
+      "updated_at": "2025-06-28T23:39:56.471Z"
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Plus, Calendar, Repeat, X, CheckSquare, User } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAuthContext } from "@/components/AuthProvider"
+import { createTask, CreateTaskData } from "@/firebase/services/taskService"
 
 export function AddTaskFlow() {
   const [taskTitle, setTaskTitle] = useState("")
@@ -14,9 +16,13 @@ export function AddTaskFlow() {
   const [selectedOwner, setSelectedOwner] = useState("alice") // Default to current user
   const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0]) // Today
   const [frequency, setFrequency] = useState("none")
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const formRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { firestoreUser } = useAuthContext();
 
   const domains = [
     { id: "kitchen", name: "Kitchen Management", emoji: "🍳", color: "text-green-600" },
@@ -68,28 +74,52 @@ export function AddTaskFlow() {
     }
   }
 
-  const handleCreateTask = () => {
-    if (!taskTitle.trim()) return
-
-    // Store task data in localStorage to simulate persistence
-    const newTask = {
-      id: `new-${Date.now()}`,
-      title: taskTitle,
-      domain: getDomainName(selectedDomain),
-      owner: getOwnerName(selectedOwner),
-      ownerAvatar: getOwnerAvatar(selectedOwner),
-      time: null, // For simplicity, not setting a specific time
-      subtasks: 0,
-      emoji: getDomainEmoji(selectedDomain),
-      isNew: true, // Flag to identify this as a newly created task
+  const handleCreateTask = async () => {
+    if (!taskTitle.trim() || !selectedDomain || !firestoreUser) {
+      console.log("❌ Debug: Missing required fields:", {
+        taskTitle: taskTitle.trim(),
+        selectedDomain,
+        firestoreUser: !!firestoreUser
+      });
+      return;
     }
+    
+    console.log("🔥 Debug: Starting task creation...");
+    setIsSaving(true);
+    setError(null);
+    setSuccess(false);
 
-    // Store the new task in localStorage
-    localStorage.setItem("newlyCreatedTask", JSON.stringify(newTask))
+    const domainObj = domains.find((d) => d.id === selectedDomain);
+    const ownerObj = owners.find((o) => o.id === selectedOwner);
 
-    // Navigate back to daily view
-    router.push("/")
-  }
+    const newTask: CreateTaskData = {
+      title: taskTitle,
+      domainId: selectedDomain,
+      domainName: domainObj ? domainObj.name : "Household",
+      ownerId: firestoreUser.uid,
+      ownerName: firestoreUser.displayName || ownerObj?.name || "User",
+      ownerAvatar: ownerObj?.avatar || "U",
+      dueDate: dueDate,
+      emoji: domainObj ? domainObj.emoji : "🏠",
+    };
+
+    console.log("🔥 Debug: Task data to create:", newTask);
+
+    try {
+      const createdTask = await createTask(newTask, "default");
+      console.log("✅ Debug: Task created successfully:", createdTask);
+      setSuccess(true);
+      setTimeout(() => {
+        console.log("🔄 Debug: Redirecting to home...");
+        router.push("/");
+      }, 1000);
+    } catch (err) {
+      console.error("❌ Debug: Failed to create task:", err);
+      setError("Failed to create task. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const getFrequencyIcon = () => {
     if (frequency === "none") return <X className="h-4 w-4 text-gray-500" />
